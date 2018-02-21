@@ -1,5 +1,6 @@
 'use strict'
-const robotData = function (id) {
+// Copy from here
+const RobotData = function (id) {
   this.id = id
   this.target = 'STARTER'
   this.eta = 0
@@ -11,5 +12,5 @@ const robotData = function (id) {
     `[${this.storage}] [${this.expertise}]`
   }
 }
-
-module.exports = robotData
+// Copy until here
+module.exports = RobotData
