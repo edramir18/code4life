@@ -31,11 +31,31 @@ function execute (command, data) {
   let [prefix, suffix] = command.split(' ')
   switch (prefix) {
     case 'GOTO':
-      if (data.target === suffix) {
-        --data.eta
-      } else {
-        data.eta = conf.routes[conf.locations[suffix] + conf.locations[data.target]] - 1
-        data.target = suffix
+      movePlayer(suffix, data)
+      break
+    case 'CONNECT':
+      if (data.target === 'SAMPLES') {
+        generateSample(suffix, data)
+      } else if (data.target === 'DIAGNOSIS') {
+
+      } else if (data.target === 'MOLECULES') {
+
+      } else if (data.target === 'LABORATORY') {
+
       }
+      break
   }
+}
+
+function movePlayer (target, player) {
+  if (player.target === target) {
+    --player.eta
+  } else {
+    player.eta = conf.routes[conf.locations[target] + conf.locations[player.target]] - 1
+    player.target = target
+  }
+}
+
+function generateSample (rank, player) {
+
 }

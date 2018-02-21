@@ -60,6 +60,7 @@ while (true) {
       sample.total = sample.cost.reduce((t, c) => t + c, 0)
       sample.ratio = sample.health / sample.total;
       samples.push(sample);
+      if(sample.health < 0) printErr(sample.health)
       if (sample.sampleId > maxID) maxID = sample.sampleId
     }
     
