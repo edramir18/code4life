@@ -10,7 +10,7 @@ const player = new RobotData(0)
 const enemy = new RobotData(1)
 console.log(drpym.debug())
 console.log(lex.debug())
-for (let i = 0; i < 4; i++) {
+for (let i = 0; i < 20; i++) {
   console.time('execute')
   let pCommand = drpym.execute(player, enemy, [])
   console.timeEnd('execute')

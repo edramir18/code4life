@@ -13,9 +13,9 @@ let c = parseInt(inputs[2]);
 let d = parseInt(inputs[3]);
 let e = parseInt(inputs[4]);
 }
-const skynet = new FSM();
-const player = new Robot(0);
-const enemy = new Robot(1);
+const drpym = new FSMRobot();
+const player = new RobotData(0);
+const enemy = new RobotData(1);
 let maxID = 0;
 // game loop
 while (true) {  
@@ -30,11 +30,11 @@ while (true) {
       robot.storage[2] = parseInt(inputs[5]);
       robot.storage[3] = parseInt(inputs[6]);
       robot.storage[4] = parseInt(inputs[7]);
-      robot.expertiseA = parseInt(inputs[8]);
-      robot.expertiseB = parseInt(inputs[9]);
-      robot.expertiseC = parseInt(inputs[10]);
-      robot.expertiseD = parseInt(inputs[11]);
-      robot.expertiseE = parseInt(inputs[12]);
+      robot.expertise[0] = parseInt(inputs[8]);
+      robot.expertise[1] = parseInt(inputs[9]);
+      robot.expertise[2] = parseInt(inputs[10]);
+      robot.expertise[3] = parseInt(inputs[11]);
+      robot.expertise[4] = parseInt(inputs[12]);
     }
     
     let inputs = readline().split(' ');
@@ -65,30 +65,19 @@ while (true) {
     
     // Write an action using print()
     // To debug: printErr('Debug messages...');
-    print(skynet.run(player, enemy, samples));
+    print(drpym.execute(player, enemy, samples));
     
 }
 
-  /*
-  * Robot Class
-  *
-  */
-function Robot(id) {
-  this.id = id;
-  this.target = '';
-  this.eta = 0;
-  this.score = 0;
-  this.storage = [0, 0, 0, 0, 0]; // [A, B, C, D, E]
-  this.expertiseA = 0;
-  this.expertiseB = 0;
-  this.expertiseC = 0;
-  this.expertiseD = 0;
-  this.expertiseE = 0;
-  this.checkMolecules= function (sample) {
-    return sample.cost.every((c, i) => c<=this.storage[i]);
-  };
+function RobotData (id) {
+  this.id = id
+  this.target = 'STARTER'
+  this.eta = 0
+  this.score = 0
+  this.storage = [0, 0, 0, 0, 0] // [A, B, C, D, E]
+  this.expertise = [0, 0, 0, 0, 0] // [A, B, C, D, E]  
 }
-function Sample(id) {
+function Sample (id) {
   this.sampleId = id;
   this.carriedBy = 0;
   this.rank = 0;
@@ -99,121 +88,65 @@ function Sample(id) {
   this.total = 0;
   
 }
-function FSM (){
-    this.target = '';
-    this.data = [];
-    this.lastID = -1;
-    this.research = []
-    this.start = function(player, enemy, samples) {
-        this.target = 'SAMPLES';
-        this.run = this.moving;
-        return `GOTO SAMPLES`;
-    };
-    this. moving = function (player, enemy, samples) {
-      if(player.target === this.target) {
-          let targetState;
-          switch(this.target) {
-            case 'SAMPLES':
-                  this.run = this.samples;
-                  break;
-            case 'DIAGNOSIS':
-                  this.run = this.diagnosis;
-                  break;
-            case 'MOLECULES':
-                  this.run = this.molecules;
-                  break;    
-            case 'LABORATORY':
-                  this.run = this.laboratory;
-                  break;
-          }
-          return this.run(player, enemy, samples);
-      } else {
-          return `GOTO ${this.target}`;
-      }
-    };
-    this.samples = function(player, enemy, samples) {
-        const owned = samples.filter(s => s.carriedBy === 0)
-        if(this.research.length === 0) {
-            this.research.push(2)
-            return 'CONNECT 2';
-        } else {
-            this.research[0]= owned[0].sampleId
-            this.run = this.moving;
-            this.target = 'DIAGNOSIS';
-            return 'GOTO DIAGNOSIS';
+function FSMRobot (id) {
+  this.data = new RobotData(id)
+  this.action = {
+    run: function (fsm, player, enemy, samples) {
+      return 'GOTO SAMPLES'
+    },
+    validate: function (fsm, player, enemy, samples) {
+      fsm.action = fsm.states['MOVING']
+    }
+  }
+  this.execute = function (player, enemy, samples) {
+    const command = this.action.run(this, player, enemy, samples)
+    this.action.validate(this, player, enemy, samples)
+    return command
+  }
+  this.states = {
+    'MOVING': {
+      run: function (fsm, player, enemy, samples) {
+        return `GOTO ${player.target}`
+      },
+      validate: function (fsm, player, enemy, samples) {
+        if (player.eta === 1) {
+          fsm.data.target = player.target
+          fsm.action = fsm.states[player.target]
         }
-    };
-    this.diagnosis = function (player, enemy, samples) {
-        if(this.research.length > 0) {
-            const id = this.research.shift();
-            this.lastID = id;
-            return `CONNECT ${id}`;
-        }
-        /*if(this.lastID >= 0) {
-            
-        }*/
-        const last = this.lastID;
-        this.lastID = -1;
-        this.run = this.moving;
-        this.target = 'MOLECULES';
-        return 'GOTO MOLECULES';
-      /*
-      const owned = samples.filter(s => s.carriedBy === 0);
-      let frees = samples.filter(s => s.carriedBy === -1 && s.total <= 10);
-      if(!owned || owned.length < 1) {
-        const max = frees.reduce((obj, s) => s.ratio > obj.ratio ? s : obj, {ratio:0});
-        const id = max.sampleId;
-        this.data.push(max);
-        return `CONNECT ${id}`;
-      } else {
-        this.run = this.moving;
-        this.target = 'MOLECULES';
-        return 'GOTO MOLECULES';
-      }*/
-      
-    };
-    this.molecules = function (player, enemy, samples) {
-      let owned = samples.filter(s => s.carriedBy === 0);
-      let molecule = 64;
-      let total = 0;
-      let move = false;
-      function checkMolecule(c, i) {
-          molecule++;
-          total++;
-          return c === player.storage[i];
       }
-      for(let i=0; i< owned.length; i++) {
-          molecule = 64;
-          move = owned[i].cost.every(checkMolecule) || move;
-          if(!move || total === 10) {
-              break;
-          }
+    },
+    'SAMPLES': {
+      run: function (fsm, player, enemy, samples) {
+        return `GOTO DIAGNOSIS`
+      },
+      validate: function (fsm, player, enemy, samples) {
+        fsm.action = fsm.states['MOVING']
       }
-      if(move) {
-        this.run = this.moving;
-        this.target = 'LABORATORY';
-        return 'GOTO LABORATORY';
-      } else {
-          return `CONNECT ${String.fromCharCode(molecule)}`;
+    },
+    'DIAGNOSIS': {
+      run: function (fsm, player, enemy, samples) {
+        return `GOTO MOLECULES`
+      },
+      validate: function (fsm, player, enemy, samples) {
+        fsm.action = fsm.states['MOVING']
       }
-    };
-    this.laboratory = function (player, enemy, samples) {
-        let owned = samples.filter(s => s.carriedBy === 0);
-      if(owned && owned.length > 0) {
-          if(player.checkMolecules(owned[0])) {
-            const sample  = owned.shift();
-            return `CONNECT ${sample.sampleId}`;        
-          } else {
-            this.run = this.moving;
-            this.target = 'MOLECULES';
-            return 'GOTO MOLECULES';  
-          }
-      } else {
-          this.run = this.moving;
-          this.target = 'SAMPLES';
-          return 'GOTO SAMPLES'; 
+    },
+    'MOLECULES': {
+      run: function (fsm, player, enemy, samples) {
+        return `GOTO LABORATORY`
+      },
+      validate: function (fsm, player, enemy, samples) {
+        fsm.action = fsm.states['MOVING']
       }
-    };
-    this.run = this.start;
+    },
+    'LABORATORY': {
+      run: function (fsm, player, enemy, samples) {
+        return `GOTO SAMPLES`
+      },
+      validate: function (fsm, player, enemy, samples) {
+        fsm.action = fsm.states['MOVING']
+      }
+    }
+  }
 }
   

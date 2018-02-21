@@ -8,7 +8,6 @@ const FSMRobot = function (id) {
   }
   this.action = {
     run: function (fsm, player, enemy, samples) {
-      // fsm.data.target = 'SAMPLES'
       return 'GOTO SAMPLES'
     },
     validate: function (fsm, player, enemy, samples) {
@@ -33,14 +32,35 @@ const FSMRobot = function (id) {
       }
     },
     'SAMPLES': {
-      run: function (player, enemy, samples) {
-        return `TO DO`
+      run: function (fsm, player, enemy, samples) {
+        return `GOTO DIAGNOSIS`
       },
-      validate: function (player, enemy, samples) {
-        if (player.eta === 1) {
-          this.target = player.target
-          this.action = this.samples[player.target]
-        }
+      validate: function (fsm, player, enemy, samples) {
+        fsm.action = fsm.states['MOVING']
+      }
+    },
+    'DIAGNOSIS': {
+      run: function (fsm, player, enemy, samples) {
+        return `GOTO MOLECULES`
+      },
+      validate: function (fsm, player, enemy, samples) {
+        fsm.action = fsm.states['MOVING']
+      }
+    },
+    'MOLECULES': {
+      run: function (fsm, player, enemy, samples) {
+        return `GOTO LABORATORY`
+      },
+      validate: function (fsm, player, enemy, samples) {
+        fsm.action = fsm.states['MOVING']
+      }
+    },
+    'LABORATORY': {
+      run: function (fsm, player, enemy, samples) {
+        return `GOTO SAMPLES`
+      },
+      validate: function (fsm, player, enemy, samples) {
+        fsm.action = fsm.states['MOVING']
       }
     }
   }
