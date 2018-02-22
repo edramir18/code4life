@@ -47,9 +47,8 @@ while (true) {
     const samples = [];
     for (let i = 0; i < sampleCount; i++) {
       const inputs = readline().split(' ');
-      const sample = new Sample(parseInt(inputs[0]));
-      sample.carriedBy = parseInt(inputs[1]);
-      sample.rank = parseInt(inputs[2]);
+      const sample = new SampleData(parseInt(inputs[0]), 
+        parseInt(inputs[1]), parseInt(inputs[2]));
       sample.expertiseGain = inputs[3];
       sample.health = parseInt(inputs[4]);
       sample.cost[0] = parseInt(inputs[5]);
@@ -60,7 +59,7 @@ while (true) {
       sample.total = sample.cost.reduce((t, c) => t + c, 0)
       sample.ratio = sample.health / sample.total;
       samples.push(sample);
-      if(sample.health < 0) printErr(sample.health)
+      if(sample.health < 0) printErr(sample.sampleId, sample.carriedBy, sample.health, sample.cost);
       if (sample.sampleId > maxID) maxID = sample.sampleId
     }
     
@@ -78,16 +77,15 @@ function RobotData (id) {
   this.storage = [0, 0, 0, 0, 0] // [A, B, C, D, E]
   this.expertise = [0, 0, 0, 0, 0] // [A, B, C, D, E]  
 }
-function Sample (id) {
-  this.sampleId = id;
-  this.carriedBy = 0;
-  this.rank = 0;
-  this.expertiseGain = '';
-  this.health = 0;
-  this.cost = [0, 0, 0, 0, 0]; // [A, B, C, D, E]
-  this.ratio = 0;
-  this.total = 0;
-  
+function SampleData (id, playerId, rank) {
+  this.sampleId = id
+  this.carriedBy = playerId
+  this.rank = rank
+  this.expertiseGain = ''
+  this.health = 0
+  this.cost = [0, 0, 0, 0, 0] // [A, B, C, D, E]
+  this.ratio = 0
+  this.total = 0
 }
 function FSMRobot (id) {
   this.data = new RobotData(id)
