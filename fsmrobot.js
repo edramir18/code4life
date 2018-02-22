@@ -86,32 +86,7 @@ const FSMRobot = function (id) {
         fsm.action = fsm.states['MOVING']
       }
     }
-  }
-  this.sortItems = function () {
-    const arr = [
-      {
-        item: this.items[0],
-        exp: this.items[0].cost.reduce((t, c, i) => t + (c - this.data.expertise[i]), 0)
-      },
-      {
-        item: this.items[1],
-        exp: this.items[1].cost.reduce((t, c, i) => t + (c - this.data.expertise[i]), 0)
-      },
-      {
-        item: this.items[2],
-        exp: this.items[2].cost.reduce((t, c, i) => t + (c - this.data.expertise[i]), 0)
-      }
-    ]
-    arr.sort((a, b) => a.exp - b.exp)
-    if ((arr[0].exp + arr[1].exp + arr[2].exp) <= 10) {
-      return arr.map(c => c.item)
-    } else if ((arr[0].exp + arr[1].exp) <= 10) {
-      return arr.map(c => c.item)
-    } else if ((arr[0].exp + arr[1].exp) <= 10) {
-      return [this.items[0], this.items[1], this.items[2]]
-    } else if ((arr[0].exp + arr[1].exp) <= 10) {
-    }
-  }
+  }  
 }
 // Copy until here
 module.exports = FSMRobot

@@ -37,5 +37,22 @@ const routes = {
   '10': 4,
   '12': 3
 }
+
+const ranks = {
+  1: {
+    health: [1, 10],
+    maxMolecules: [3, 5]
+  },
+  2: {
+    health: [10, 20, 30],
+    maxMolecules: [5, 8]
+  },
+  3: {
+    health: [30, 40, 50],
+    maxMolecules: [7, 14]
+  }
+}
+
 module.exports.routes = routes
 module.exports.locations = locations
+module.exports.ranks = ranks
