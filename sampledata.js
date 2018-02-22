@@ -13,6 +13,15 @@ const SampleData = function (id, playerId, rank) {
     return `${this.sampleId} ${this.carriedBy} ${this.rank} ${this.expertiseGain} ` +
       `${this.health} [${this.cost}]`
   }
+  this.clone = function () {
+    const clon = new SampleData(this.sampleId, this.carriedBy, this.rank)
+    clon.expertiseGain = this.expertiseGain
+    clon.health = this.health
+    clon.ratio = this.ratio
+    clon.total = this.total
+    clon.cost = this.cost.slice(0)
+    return clon
+  }
 }
 // Copy until here
 module.exports = SampleData

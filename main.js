@@ -10,29 +10,37 @@ const player = new RobotData(0)
 const enemy = new RobotData(1)
 const samples = []
 let maxID = -1
+header('Round 0', '#', 30)
 console.log(drpym.debug())
 console.log(lex.debug())
-
-const id = setInterval(main, 1000)
+const id = setInterval(main, 500)
 let iter = 0
-const maxIteration = 10
+const maxIteration = 20
 
 function main () {
-  if (++iter === maxIteration) clearInterval(id)
+  header(`Round ${++iter}`, '#', 30)
+  if (iter === maxIteration) clearInterval(id)
+  header(`Player`, '-', 30)
+  let clons = samples.map(s => s.clone())
   console.time('execute')
-  let pCommand = drpym.execute(player, enemy, [])
+  let pCommand = drpym.execute(player, enemy, clons)
   console.timeEnd('execute')
-  execute(pCommand, player)
-  console.time('execute')
-  let eCommand = lex.execute(enemy, player, [])
-  console.timeEnd('execute')
-  execute(eCommand, enemy)
   console.log(pCommand)
-  console.log(eCommand)
+  execute(pCommand, player)
   console.log(drpym.debug())
+  drpym.items.forEach(s => console.log(s.debug()))
+
+  header(`Enemy`, '-', 30)
+  clons = samples.map(s => s.clone())
+  console.time('execute')
+  let eCommand = lex.execute(enemy, player, clons)
+  console.timeEnd('execute')
+  console.log(eCommand)
+  execute(eCommand, enemy)
   console.log(lex.debug())
+  lex.items.forEach(s => console.log(s.debug()))
+  header(`Samples`, '-', 30)
   samples.forEach(s => console.log(s.debug()))
-  console.log(`${'#'.repeat(10)} Round ${iter} ${'#'.repeat(10)}`)
 }
 
 function execute (command, data) {
@@ -43,9 +51,9 @@ function execute (command, data) {
       break
     case 'CONNECT':
       if (data.target === 'SAMPLES') {
-        samples.push(generateSample(suffix, data))
+        samples.push(generateSample(Number(suffix), data))
       } else if (data.target === 'DIAGNOSIS') {
-
+        evaluateSample(Number(suffix), data)
       } else if (data.target === 'MOLECULES') {
 
       } else if (data.target === 'LABORATORY') {
@@ -65,13 +73,29 @@ function movePlayer (target, player) {
 }
 
 function generateSample (rank, player) {
-  return new SampleData(player.id, ++maxID, rank)
+  return new SampleData(++maxID, player.id, rank)
 }
 
-function random (min, max) {
+function evaluateSample (id, player) {
+  const sample = samples.find(s => s.sampleId === id)
+  if (sample.health < 0) {
+    sample.health = randomMinMax(1, 10)
+  } else if (sample.carriedBy < 0) {
+    sample.carriedBy = player.id
+  } else {
+    sample.carriedBy = -1
+  }
+}
+
+function randomMinMax (min, max) {
   return min + random(max - min)
 }
 
 function random (n) {
   return Math.floor(Math.random() * n)
+}
+
+function header (msg, filler, width) {
+  const n = Math.floor((width - msg.length - 2) / 2)
+  console.log(`${filler.repeat(n)} ${msg} ${filler.repeat(width - n)}`)
 }

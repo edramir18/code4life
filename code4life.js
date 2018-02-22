@@ -59,7 +59,7 @@ while (true) {
       sample.total = sample.cost.reduce((t, c) => t + c, 0)
       sample.ratio = sample.health / sample.total;
       samples.push(sample);
-      if(sample.health < 0) printErr(sample.sampleId, sample.carriedBy, sample.health, sample.cost);
+      // if(sample.health < 0) printErr(sample.sampleId, sample.carriedBy, sample.health, sample.cost);
       if (sample.sampleId > maxID) maxID = sample.sampleId
     }
     
@@ -89,6 +89,7 @@ function SampleData (id, playerId, rank) {
 }
 function FSMRobot (id) {
   this.data = new RobotData(id)
+  this.items = []
   this.action = {
     run: function (fsm, player, enemy, samples) {
       return 'GOTO SAMPLES'
@@ -116,18 +117,38 @@ function FSMRobot (id) {
     },
     'SAMPLES': {
       run: function (fsm, player, enemy, samples) {
-        return `GOTO DIAGNOSIS`
+        const owned = samples.filter(s => s.carriedBy === player.id)
+        fsm.items = owned
+        if (!owned || owned.length < 3) {
+          return 'CONNECT 2'
+        }
+        return 'GOTO DIAGNOSIS'
       },
       validate: function (fsm, player, enemy, samples) {
-        fsm.action = fsm.states['MOVING']
+        if (fsm.items.length === 3) {
+          fsm.action = fsm.states['MOVING']
+        }
       }
     },
     'DIAGNOSIS': {
       run: function (fsm, player, enemy, samples) {
-        return `GOTO MOLECULES`
+        if (fsm.items.length === 0) return 'GOTO SAMPLES'
+        const diagnosed = samples.find(s => s.sampleId === fsm.items[0].sampleId)
+        printErr(fsm.items.length, diagnosed.sampleId, diagnosed.health)
+        if (diagnosed.health < 0) {
+          fsm.items.shift()
+          diagnosed.health = 0
+          fsm.items.push(diagnosed)
+          return `CONNECT ${diagnosed.sampleId}`
+        } else {
+          fsm.items = samples.filter(s => s.carriedBy === player.id)
+          return `GOTO MOLECULES`
+        }
       },
       validate: function (fsm, player, enemy, samples) {
-        fsm.action = fsm.states['MOVING']
+        if (fsm.items.length === 0 || fsm.items.every(s => s.health > 0)) {          
+          fsm.action = fsm.states['MOVING']
+        }
       }
     },
     'MOLECULES': {
