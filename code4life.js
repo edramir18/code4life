@@ -142,6 +142,7 @@ function FSMRobot (id) {
           return `CONNECT ${diagnosed.sampleId}`
         } else {
           fsm.items = samples.filter(s => s.carriedBy === player.id)
+          fsm.items = fsm.sortItems()
           return `GOTO MOLECULES`
         }
       },
@@ -152,10 +153,26 @@ function FSMRobot (id) {
       }
     },
     'MOLECULES': {
-      run: function (fsm, player, enemy, samples) {
+      run: function (fsm, player, enemy, samples) {        
+        if(fsm.items.length === 0) return 'GOTO SAMPLES'
+        let letter = 64
+        let storage = player.storage.reduce((t, c) => t+c, 0)
+        const validate = false
+        for(let i = 0; i<fsm.items.length ;i++){          
+            validate = fsm.items[i].cost.every((c, i) => {
+            letter++
+            return c <= player.storage[i]
+          })          
+        }
+        if(!validate && storage < 10) {
+          return `CONNECT ${String.fromCharCode(letter)}`
+        }
         return `GOTO LABORATORY`
       },
       validate: function (fsm, player, enemy, samples) {
+        if (fsm.items.length === 0) {          
+          fsm.action = fsm.states['MOVING']
+        }
         fsm.action = fsm.states['MOVING']
       }
     },
@@ -166,6 +183,34 @@ function FSMRobot (id) {
       validate: function (fsm, player, enemy, samples) {
         fsm.action = fsm.states['MOVING']
       }
+    }
+  }
+  this.sortItems = function () {
+    const arr = [
+      {
+        item: this.items[0],
+        exp: this.items[0].cost.reduce((t, c, i) => t + (c - this.data.expertise[i]), 0)
+      },
+      {
+        item: this.items[1],
+        exp: this.items[1].cost.reduce((t, c, i) => t + (c - this.data.expertise[i]), 0)
+      },
+      {
+        item: this.items[2],
+        exp: this.items[2].cost.reduce((t, c, i) => t + (c - this.data.expertise[i]), 0)
+      }
+    ]
+    arr.sort((a, b) => a.exp - b.exp)
+    if ((arr[0].exp + arr[1].exp + arr[2].exp) <= 10) {
+      return arr.map(c => c.item)
+    } else if ((arr[0].exp + arr[1].exp) <= 10) {
+      return arr.map(c => c.item)
+    } else if ((arr[0].exp + arr[2].exp) <= 10) {
+      return [arr[0].item, arr[2].item, arr[1].item]
+    } else if ((arr[1].exp + arr[2].exp) <= 10) {
+      return [arr[1].item, arr[2].item, arr[0].item]
+    } else {
+      return arr.map(c => c.item)
     }
   }
 }
